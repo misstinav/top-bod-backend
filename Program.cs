@@ -1,4 +1,7 @@
-﻿var builder = WebApplication.CreateBuilder(args);
+﻿using TopBodBackend.Config;
+
+var builder = WebApplication.CreateBuilder(args);
+
 
 // Add services to the container.
 
@@ -6,10 +9,12 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddHttpClient();
 
 var provider = builder.Services.BuildServiceProvider();
 var configuration = provider.GetRequiredService<IConfiguration>();
 
+builder.Services.Configure<CalorieNinjas>(configuration.GetSection("calorieNinjasConfig"));
 builder.Services.AddCors(options =>
 {
     var frontendURL = configuration.GetValue<string>("frontend_url");
