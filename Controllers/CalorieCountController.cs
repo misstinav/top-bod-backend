@@ -1,26 +1,32 @@
 ﻿using System;
 using Microsoft.AspNetCore.Mvc;
 using TopBodBackend.Models;
+using TopBodBackend.Services;
 
 namespace TopBodBackend.Controllers;
 
 
 [ApiController]
-[Route("[controller")]
+[Route("[controller]")]
 public class CalorieCountController : ControllerBase
 {
+    private readonly ICalorieNinjasService _calorieNinjasService;
     private readonly IHttpClientFactory _httpFactory;
+
     public CalorieCountController(
+        ICalorieNinjasService calorieNinjasService,
         IHttpClientFactory httpFactory
         )
     {
+        _calorieNinjasService = calorieNinjasService;
         _httpFactory = httpFactory;
     }
 
     [HttpGet(Name = "GetNutritionDetails")]
-    public async void GetNutritionAsync()
+    public IActionResult GetNutritionAsync(string query)
     {
-        Console.WriteLine("response goes here");
+        var nutrition = _calorieNinjasService.GetNutritionDetails(query);
+        return Ok(nutrition);
     }
 
 }
