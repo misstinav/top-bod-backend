@@ -5,7 +5,7 @@ namespace TopBodBackend.Services
 {
 	public interface ICalorieNinjasService
 	{
-		List<NutritionDetails> GetNutritionDetails(string query);
+		Task<List<NutritionDetails>> GetNutritionDetails(string query);
 	}
 }
 

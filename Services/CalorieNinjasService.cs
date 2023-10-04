@@ -6,8 +6,8 @@ using TopBodBackend.Models;
 
 namespace TopBodBackend.Services
 {
-	public class CalorieNinjasService : ICalorieNinjasService
-	{
+    public class CalorieNinjasService : ICalorieNinjasService
+    {
         private CalorieNinjas _calorieNinjasConfig;
 
         public CalorieNinjasService(IOptions<CalorieNinjas> opts)
@@ -15,7 +15,7 @@ namespace TopBodBackend.Services
             _calorieNinjasConfig = opts.Value;
         }
 
-        public async List<NutritionDetails> GetNutritionDetails(string query)
+        public async Task<List<NutritionDetails>> GetNutritionDetails(string query)
         {
             string url = $"https://calorieninjas.com/v1/nutrition?query={query}";
             var nutritionDetails = new List<NutritionDetails>();
@@ -33,22 +33,27 @@ namespace TopBodBackend.Services
                 var response = await client.SendAsync(requestMessage);
 
                 //var response = client.GetAsync(url).Result;
-                //need error handling if response isn't good
-                var json = response.Content.ReadAsStringAsync().Result;
-
-                var calorieNinjasResponse = JsonSerializer.
-                    Deserialize<CalorieNinjasResponse>(json);
-
-                foreach (var foodItem in calorieNinjasResponse.Nutrition)
+                //need error handling if response isn't
+                if (response.IsSuccessStatusCode)
                 {
-                    nutritionDetails.Add(new NutritionDetails
+                    var json = response.Content.ReadAsStringAsync().Result;
+                    var calorieNinjasResponse = JsonSerializer.
+                        Deserialize<CalorieNinjasResponse>(json);
+
+                    foreach (var foodItem in calorieNinjasResponse.Nutrition)
                     {
-                        FoodName = foodItem.FoodName,
-                        Calories = foodItem.Calories,
-                        ServingInGrams = foodItem.ServingSizeInGrams,
-                        TotalCarbsInGrams = foodItem.Carbohydrates,
-                        TotalProteinInGrams = foodItem.Protein,
-                    });
+                        nutritionDetails.Add(new NutritionDetails
+                        {
+                            FoodName = foodItem.FoodName,
+                            Calories = foodItem.Calories,
+                            ServingInGrams = foodItem.ServingSizeInGrams,
+                            TotalCarbsInGrams = foodItem.Carbohydrates,
+                            TotalProteinInGrams = foodItem.Protein,
+                        });
+                    }
+                }else
+                {
+                    Console.WriteLine("Didn't work");
                 }
             }
             //}
