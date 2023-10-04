@@ -17,23 +17,19 @@ namespace TopBodBackend.Services
 
         public async Task<List<NutritionDetails>> GetNutritionDetails(string query)
         {
-            string url = $"https://calorieninjas.com/v1/nutrition?query={query}";
+            string url = $"https://api.calorieninjas.com/v1/nutrition?query={query}";
             var nutritionDetails = new List<NutritionDetails>();
             var client = new HttpClient();
 
             //using (HttpClient client = new HttpClient())
-            //{
-            using (var requestMessage = new HttpRequestMessage(
+            using (HttpRequestMessage request = new HttpRequestMessage(
                 HttpMethod.Get, url))
             {
-                requestMessage.Headers.Authorization =
-                    new System.Net.Http.Headers.AuthenticationHeaderValue(
-                        "X-Api-Key", _calorieNinjasConfig.ApiKey);
+                request.Headers.Add("X-Api-Key", _calorieNinjasConfig.ApiKey);
 
-                var response = await client.SendAsync(requestMessage);
+                var response = await client.SendAsync(request);
+                //**response not valid**
 
-                //var response = client.GetAsync(url).Result;
-                //need error handling if response isn't
                 if (response.IsSuccessStatusCode)
                 {
                     var json = response.Content.ReadAsStringAsync().Result;
@@ -56,7 +52,6 @@ namespace TopBodBackend.Services
                     Console.WriteLine("Didn't work");
                 }
             }
-            //}
 
             return nutritionDetails;
         }
