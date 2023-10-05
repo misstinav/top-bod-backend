@@ -9,48 +9,51 @@ namespace TopBodBackend.Services
     public class CalorieNinjasService : ICalorieNinjasService
     {
         private CalorieNinjas _calorieNinjasConfig;
+        private readonly IHttpClientFactory _httpFactory;
 
-        public CalorieNinjasService(IOptions<CalorieNinjas> opts)
+        public CalorieNinjasService(
+            IOptions<CalorieNinjas> opts,
+            IHttpClientFactory httpFactory)
         {
             _calorieNinjasConfig = opts.Value;
+            _httpFactory = httpFactory;
         }
 
         public async Task<List<NutritionDetails>> GetNutritionDetails(string query)
         {
             string url = $"https://api.calorieninjas.com/v1/nutrition?query={query}";
             var nutritionDetails = new List<NutritionDetails>();
-            var client = new HttpClient();
+            var client = _httpFactory.CreateClient();
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, url);
+            request.Headers.Add("X-Api-Key", _calorieNinjasConfig.ApiKey);
 
-            //using (HttpClient client = new HttpClient())
-            using (HttpRequestMessage request = new HttpRequestMessage(
-                HttpMethod.Get, url))
+
+            var response = await client.SendAsync(request);
+            response.EnsureSuccessStatusCode();
+            Console.WriteLine(await response.Content.ReadAsStringAsync());
+            //**response not valid**
+
+            if (response.IsSuccessStatusCode)
             {
-                request.Headers.Add("X-Api-Key", _calorieNinjasConfig.ApiKey);
+                Console.WriteLine("In conditional");
+                var json = await response.Content.ReadAsStringAsync();
+                var calorieNinjasResponse = JsonSerializer.
+                    Deserialize<CalorieNinjasResponse>(json);
 
-                var response = await client.SendAsync(request);
-                //**response not valid**
-
-                if (response.IsSuccessStatusCode)
+                foreach (var foodItem in calorieNinjasResponse.Nutrition)
                 {
-                    var json = response.Content.ReadAsStringAsync().Result;
-                    var calorieNinjasResponse = JsonSerializer.
-                        Deserialize<CalorieNinjasResponse>(json);
-
-                    foreach (var foodItem in calorieNinjasResponse.Nutrition)
+                    nutritionDetails.Add(new NutritionDetails
                     {
-                        nutritionDetails.Add(new NutritionDetails
-                        {
-                            FoodName = foodItem.FoodName,
-                            Calories = foodItem.Calories,
-                            ServingInGrams = foodItem.ServingSizeInGrams,
-                            TotalCarbsInGrams = foodItem.Carbohydrates,
-                            TotalProteinInGrams = foodItem.Protein,
-                        });
-                    }
-                }else
-                {
-                    Console.WriteLine("Didn't work");
+                        FoodName = foodItem.FoodName,
+                        Calories = foodItem.Calories,
+                        ServingInGrams = foodItem.ServingSizeInGrams,
+                        TotalCarbsInGrams = foodItem.Carbohydrates,
+                        TotalProteinInGrams = foodItem.Protein,
+                    });
                 }
+            }else
+            {
+                Console.WriteLine("Didn't work");
             }
 
             return nutritionDetails;

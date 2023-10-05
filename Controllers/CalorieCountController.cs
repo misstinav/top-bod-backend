@@ -23,10 +23,10 @@ public class CalorieCountController : ControllerBase
     }
 
     [HttpGet(Name = "GetNutritionDetails")]
-    public IActionResult GetNutritionAsync(string query)
+    public Task<List<NutritionDetails>> GetNutritionAsync(string query)
     {
         var nutrition = _calorieNinjasService.GetNutritionDetails(query);
-        return Ok(nutrition);
+        return nutrition;
     }
 
 }
