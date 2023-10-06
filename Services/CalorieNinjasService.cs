@@ -25,39 +25,31 @@ namespace TopBodBackend.Services
             var nutritionDetails = new List<NutritionDetails>();
             var client = _httpFactory.CreateClient();
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, url);
+            //issue is with extracting apiKey, GET works fine when key is hard-coded.
             request.Headers.Add("X-Api-Key", _calorieNinjasConfig.ApiKey);
-
 
             var response = await client.SendAsync(request);
             response.EnsureSuccessStatusCode();
-            Console.WriteLine(await response.Content.ReadAsStringAsync());
-            //**response not valid**
+            //can add try/catch or conditional testing for good response other
+            //than the line above
+            var json = await response.Content.ReadAsStringAsync();
+            var calorieNinjasResponse = JsonSerializer.
+                Deserialize<CalorieNinjasResponse>(json);
 
-            if (response.IsSuccessStatusCode)
+            foreach (var foodItem in calorieNinjasResponse.Nutrition)
             {
-                Console.WriteLine("In conditional");
-                var json = await response.Content.ReadAsStringAsync();
-                var calorieNinjasResponse = JsonSerializer.
-                    Deserialize<CalorieNinjasResponse>(json);
-
-                foreach (var foodItem in calorieNinjasResponse.Nutrition)
+                nutritionDetails.Add(new NutritionDetails
                 {
-                    nutritionDetails.Add(new NutritionDetails
-                    {
-                        FoodName = foodItem.FoodName,
-                        Calories = foodItem.Calories,
-                        ServingInGrams = foodItem.ServingSizeInGrams,
-                        TotalCarbsInGrams = foodItem.Carbohydrates,
-                        TotalProteinInGrams = foodItem.Protein,
-                    });
-                }
-            }else
-            {
-                Console.WriteLine("Didn't work");
+                    FoodName = foodItem.FoodName,
+                    Calories = foodItem.Calories,
+                    ServingInGrams = foodItem.ServingSizeInGrams,
+                    TotalCarbsInGrams = foodItem.Carbohydrates,
+                    TotalProteinInGrams = foodItem.Protein,
+                    TotalFatInGrams = foodItem.TotalFatInGrams
+                });
             }
 
             return nutritionDetails;
         }
     }
 }
-
